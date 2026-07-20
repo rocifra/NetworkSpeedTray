@@ -1,0 +1,26 @@
+# Build output
+/NetworkSpeedTray.exe
+/NetworkSpeedTray.verify.exe
+*.pdb
+*.obj
+bin/
+obj/
+artifacts/
+TestResults/
+
+# Visual Studio and VS Code user state
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local AI-tool configuration
+.agents/
+.claude/
+
+# Operating-system files
+Thumbs.db
+Desktop.ini
+.DS_Store
