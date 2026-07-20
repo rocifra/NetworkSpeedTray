@@ -92,6 +92,7 @@ namespace NetworkSpeedTray
             if (_widget != null && _widget.Visible)
             {
                 _widget.UpdateSpeeds(down, up);
+                _widget.KeepAboveTaskbar();
             }
         }
 

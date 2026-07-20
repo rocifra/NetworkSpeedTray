@@ -20,6 +20,14 @@ namespace NetworkSpeedTray
         private const int WS_EX_TRANSPARENT = 0x00000020;
         private const int WS_EX_LAYERED = 0x00080000;
 
+        // Z-order flags used to keep the widget above the topmost taskbar without
+        // moving, resizing, or activating the widget.
+        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint SWP_NOACTIVATE = 0x0010;
+        private const uint SWP_NOOWNERZORDER = 0x0200;
+
         // Gap (px) between the download and upload segments.
         private const int SegmentGap = 16;
 
@@ -125,7 +133,24 @@ namespace NetworkSpeedTray
         public void ShowWidget()
         {
             Show();
-            BringToFront();
+            KeepAboveTaskbar();
+        }
+
+        public void KeepAboveTaskbar()
+        {
+            if (!IsHandleCreated || !Visible)
+            {
+                return;
+            }
+
+            SetWindowPos(
+                Handle,
+                HWND_TOPMOST,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
         }
 
         // --- Appearance controls (invoked from the tray menu) ---
@@ -206,6 +231,8 @@ namespace NetworkSpeedTray
             {
                 BeginInvoke(new MethodInvoker(PinToAllDesktops));
             }
+
+            KeepAboveTaskbar();
         }
 
         private void PinToAllDesktops()
@@ -268,6 +295,7 @@ namespace NetworkSpeedTray
                 Location = new Point(
                     Cursor.Position.X - _dragOffset.X,
                     Cursor.Position.Y - _dragOffset.Y);
+                KeepAboveTaskbar();
             }
         }
 
@@ -276,6 +304,7 @@ namespace NetworkSpeedTray
             if (_dragging && e.Button == MouseButtons.Left)
             {
                 _dragging = false;
+                KeepAboveTaskbar();
                 Settings.WidgetLocation = Location;
                 Settings.HasSavedLocation = true;
                 Settings.Save();
@@ -354,6 +383,17 @@ namespace NetworkSpeedTray
 
         [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
         private static extern IntPtr SetWindowLongPtr64(IntPtr hwnd, int index, IntPtr value);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetWindowPos(
+            IntPtr hwnd,
+            IntPtr hwndInsertAfter,
+            int x,
+            int y,
+            int width,
+            int height,
+            uint flags);
 
         private static int Clamp(int v, int lo, int hi)
         {
